@@ -5,29 +5,40 @@
 #define MAX_FILEPATH_RECORDED 2
 #define MAX_FILE_SIZE 1024
 
+#define SAMPLES_PER_FRAME 1024
+
 void DrawWaveform(Wave wave, float timePlayed, float duration, int screenWidth, int screenHeight) {
     if (wave.frameCount == 0 || wave.data == NULL) return;
 
-
     int samplesPerChannel = wave.frameCount / wave.channels;
-    int visibleSamples = (int)((timePlayed / duration) * samplesPerChannel);
-    if (visibleSamples <= 1) return;
+    short* samples = (short*)wave.data;
+
+    // Calculate which sample we’re currently at
+    int currentSample = (int)((timePlayed / duration) * samplesPerChannel);
+
+    // Clamp so we don’t go out of bounds
+    if (currentSample + SAMPLES_PER_FRAME >= samplesPerChannel) {
+        currentSample = samplesPerChannel - SAMPLES_PER_FRAME;
+    }
+    if (currentSample < 1) currentSample = 1;
 
     float centerY = screenHeight / 2.0f;
     float scale = screenHeight / 2.5f;
 
-    short* samples = (short*)wave.data;
+    for (int i = 1; i < SAMPLES_PER_FRAME; i++) {
+        int index1 = (currentSample + i - 1) * wave.channels;
+        int index2 = (currentSample + i) * wave.channels;
 
-    for (int i = 1; i < visibleSamples; i++) {
-        float x1 = (float)(i - 1) / visibleSamples * screenWidth;
-        float y1 = centerY - samples[(i - 1) * wave.channels] / 32768.0f * scale;
+        float x1 = (float)(i - 1) / SAMPLES_PER_FRAME * screenWidth;
+        float y1 = centerY - (samples[index1] / 32768.0f) * scale;
 
-        float x2 = (float)i / visibleSamples * screenWidth;
-        float y2 = centerY - samples[i * wave.channels] / 32768.0f * scale;
+        float x2 = (float)i / SAMPLES_PER_FRAME * screenWidth;
+        float y2 = centerY - (samples[index2] / 32768.0f) * scale;
 
         DrawLine((int)x1, (int)y1, (int)x2, (int)y2, DARKBLUE);
     }
 }
+
 
 int main(void) {
     const int w_width = 800;
@@ -35,7 +46,7 @@ int main(void) {
 
     InitWindow(w_width, w_height, "Music Visualizer");
     InitAudioDevice();
-    SetTargetFPS(60);
+    //SetTargetFPS(60);
 
     int filepathCounter = 0;
     char* filepath[MAX_FILEPATH_RECORDED] = { 0 };
