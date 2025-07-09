@@ -4,7 +4,6 @@
 
 #define MAX_FILEPATH_RECORDED 2
 #define MAX_FILE_SIZE 1024
-
 #define SAMPLES_PER_FRAME 1024
 
 void DrawWaveform(Wave wave, float timePlayed, float duration, int screenWidth, int screenHeight) {
@@ -12,11 +11,7 @@ void DrawWaveform(Wave wave, float timePlayed, float duration, int screenWidth, 
 
     int samplesPerChannel = wave.frameCount / wave.channels;
     short* samples = (short*)wave.data;
-
-    // Calculate which sample we’re currently at
     int currentSample = (int)((timePlayed / duration) * samplesPerChannel);
-
-    // Clamp so we don’t go out of bounds
     if (currentSample + SAMPLES_PER_FRAME >= samplesPerChannel) {
         currentSample = samplesPerChannel - SAMPLES_PER_FRAME;
     }
