@@ -35,97 +35,9 @@ void DrawWaveform(Wave wave, float timePlayed, float duration, int screenWidth, 
 }
 
 
+
 int main(void) {
-    const int w_width = 800;
-    const int w_height = 450;
-
-    InitWindow(w_width, w_height, "Music Visualizer");
-    InitAudioDevice();
-    //SetTargetFPS(60);
-
-    int filepathCounter = 0;
-    char* filepath[MAX_FILEPATH_RECORDED] = { 0 };
-
-    for (int i = 0; i < MAX_FILEPATH_RECORDED; i++) {
-        filepath[i] = (char*)calloc(MAX_FILE_SIZE, 1);
-        if (filepath[i] == NULL) {
-            printf("Memory allocation failed for filepath[%d]\n", i);
-            return -1;
-        }
-    }
-
-    Music music = { 0 };
-    Wave wave = { 0 };
-    bool musicLoaded = false;
-    float duration = 0.0f;
-
-    while (!WindowShouldClose()) {
-        if (IsFileDropped()) {
-            FilePathList droppedFiles = LoadDroppedFiles();
-
-            if (filepathCounter >= MAX_FILEPATH_RECORDED) {
-                printf("Too many files dropped.\n");
-            }
-            else {
-                TextCopy(filepath[filepathCounter], droppedFiles.paths[0]);
-
-                if (FileExists(filepath[filepathCounter])) {
-                    music = LoadMusicStream(filepath[filepathCounter]);
-                    wave = LoadWave(filepath[filepathCounter]);
-                    duration = GetMusicTimeLength(music);
-
-                    if (wave.frameCount == 0) {
-                        printf("ERROR: Failed to load music from %s\n", filepath[filepathCounter]);
-                    }
-                    else {
-                        printf("SUCCESS: Loaded music: %s\n", filepath[filepathCounter]);
-                        PlayMusicStream(music);
-                        musicLoaded = true;
-                    }
-
-                    filepathCounter++;
-                }
-                else {
-                    printf("ERROR: File does not exist: %s\n", filepath[filepathCounter]);
-                }
-            }
-
-            UnloadDroppedFiles(droppedFiles);
-        }
-
-        if (musicLoaded) {
-            UpdateMusicStream(music);
-        }
-
-        BeginDrawing();
-        ClearBackground(LIGHTGRAY);
-
-        if (filepathCounter == 0) {
-            DrawText("Drag and drop your music file here", 100, 40, 20, BLACK);
-        }
-        else {
-            DrawText("File dropped. Playing music...", 100, 40, 20, BLACK);
-
-            if (musicLoaded) {
-                float timePlayed = GetMusicTimePlayed(music);
-                DrawWaveform(wave, timePlayed, duration, w_width, w_height);
-            }
-        }
-
-        EndDrawing();
-    }
-
-    if (musicLoaded) {
-        UnloadMusicStream(music);
-        UnloadWave(wave);
-    }
-
-    CloseAudioDevice();
-    CloseWindow();
-
-    for (int i = 0; i < MAX_FILEPATH_RECORDED; i++) {
-        free(filepath[i]);
-    }
+ 
 
     return 0;
 }
