@@ -1,4 +1,6 @@
 #include "raylib.h"
+#include "fileops.h"
+#include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 
