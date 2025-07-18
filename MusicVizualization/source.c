@@ -43,21 +43,29 @@ int main(int argc, char* argv[2]) {
     
     if (IsArgValid(argc)) {
         if (userInstruction == "play") {
-            if (getFileExtension() == ".wav") {
-                //call tanveer's function
+            if (getFilePath(inputFile)) {        //tanveer check the file path is valid or no. make it a bool.
+                if (getFileExtension(inputFile) == ".wav") {
+                    //pass to abhinav and play music
+                }
+                if (getFileExtension(inputFile) == ".txt") {
+                    //create file and pass to abhinav
+                }
+                else {                    
+                    exit(invalidFileFormat());
+                }
+
             }
-            if (getFileExtension() == ".txt") {
-                //call tanveer's function
+            else {                
+                exit(invalidFilePath());
             }
-            else {
-                fprintf(stderr, "invalid file format");
-            }
+
+            
         }
         if (userInstruction == "create") {
             //call tanveer's function
         }
-        else {
-            fprintf(stderr, "instruction invalid.");
+        else {            
+            exit(invalidInstruction());
         }
     }    
 
