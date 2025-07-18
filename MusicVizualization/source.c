@@ -39,28 +39,27 @@ void DrawWaveform(Wave wave, float timePlayed, float duration, int screenWidth, 
 }
 
 int main(int argc, char* argv[2]) {
-    if (argc < 2) {
-        return 1;
-    }
-    char arg1_lower[ARGMAX];
-    int i = 0;
-    while (argv[1][i] && i < sizeof(arg1_lower) - 1) {
-        arg1_lower[i] = tolower((char)argv[1][i]);
-        i++;
-    }
-    arg1_lower[i] = '\0';
-
-    if (strcmp(arg1_lower, "play") == 0) {
-        //isfilevalid();
-        //checkfilepath();
-        //musicprocessing();
-    }
-    else if (strcmp(arg1_lower, "create") == 0) {
-        //draganddrop();
-        //isfilevalid();
-        //verifyarray();
-        //musicprocessing();
-    }
+    char* userInstruction = convertArgToLower(argv[1]);
+    
+    if (IsArgValid(argc)) {
+        if (userInstruction == "play") {
+            if (getFileExtension() == ".wav") {
+                //call tanveer's function
+            }
+            if (getFileExtension() == ".txt") {
+                //call tanveer's function
+            }
+            else {
+                fprintf(stderr, "invalid file format");
+            }
+        }
+        if (userInstruction == "create") {
+            //call tanveer's function
+        }
+        else {
+            fprintf(stderr, "instruction invalid.");
+        }
+    }    
 
     return 0;
 }
