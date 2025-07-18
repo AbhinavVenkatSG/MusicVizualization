@@ -6,6 +6,7 @@
 #include <string.h>
 
 #define MAX_FILEPATH_RECORDED 2
+#define ARGMAX 10
 #define MAX_FILE_SIZE 1024
 #define SAMPLES_PER_FRAME 1024
 
@@ -37,20 +38,24 @@ void DrawWaveform(Wave wave, float timePlayed, float duration, int screenWidth, 
     }
 }
 
-int main(int argc, char* argv[3]) {
+int main(int argc, char* argv[2]) {
     if (argc < 2) {
-        printf("YOU SUCK BRO\n");
-        printf("KILL YOURSELF");
         return 1;
     }
+    char arg1_lower[ARGMAX];
+    int i = 0;
+    while (argv[1][i] && i < sizeof(arg1_lower) - 1) {
+        arg1_lower[i] = tolower((unsigned char)argv[1][i]);
+        i++;
+    }
+    arg1_lower[i] = '\0';
 
-    if (strcmp(argv[1], "PLAY") == 0 || strcmp(argv[1], "play") == 0) {
+    if (strcmp(arg1_lower, "play") == 0) {
         //isfilevalid();
         //checkfilepath();
         //musicprocessing();
     }
-
-    if (strcmp(argv[1], "CREATE") == 0 || strcmp(argv[1], "create") == 0) {
+    else if (strcmp(arg1_lower, "create") == 0) {
         //draganddrop();
         //isfilevalid();
         //verifyarray();
