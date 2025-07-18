@@ -45,7 +45,7 @@ int main(int argc, char* argv[2]) {
     char arg1_lower[ARGMAX];
     int i = 0;
     while (argv[1][i] && i < sizeof(arg1_lower) - 1) {
-        arg1_lower[i] = tolower((unsigned char)argv[1][i]);
+        arg1_lower[i] = tolower((char)argv[1][i]);
         i++;
     }
     arg1_lower[i] = '\0';
