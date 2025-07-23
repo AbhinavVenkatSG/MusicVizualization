@@ -63,26 +63,26 @@ int usagePrompt() {
 
 int filepathcounter = 0;
 
-int DragnDrop(char* filearray[MAX_FILEPATH_RECORDED],int* filepathcounter) {
+int DragnDrop(char* filearray[MAX_FILEPATH_RECORDED], int* filepathcounter) {
 	if (!IsFileDropped()) {
-		fprintf(stderr, "File not recognized (DragnDrop)");
+		fprintf(stderr, "Files dropped are not recognized (DragnDrop");
 		return 1;
 	}
 	FilePathList droppedFiles = LoadDroppedFiles();
-	for (int i = 0; i < droppedFiles.count;i++) {
-		if (*filepathcounter > +MAX_FILEPATH_RECORDED) {
-			fprintf(stderr, "Too many files Dropped (DragnDrop)");
+	int filesAdded = 0;
+
+	for (int i = 0; i < droppedFiles.count; i++) {
+		if (*filepathcounter >= MAX_FILEPATH_RECORDED) {
+			printf("File limit reached. Cannot add more.\n");
 			break;
 		}
+		TextCopy(filearray[*filepathcounter], droppedFiles.paths[i]);
+		printf("Added dropped file: %s\n", filearray[*filepathcounter]);
 
-		const char* droppedPath = droppedFiles.paths[i];
-		TextCopy(filearray[*filepathcounter], droppedPath);
-		(*filepathcounter++);
-
+		(*filepathcounter)++;
+		filesAdded++;
 	}
-	UnloadDroppedFiles(droppedFiles);
-	return 1;
-
+	return filesAdded;
 }
 
 
