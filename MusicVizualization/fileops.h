@@ -12,3 +12,5 @@ int memfilepath(char* inputarray[MAX_FILEPATH_RECORDED]);
 
 
 int Mem_filepath_free(char* inputarray[MAX_FILEPATH_RECORDED]);
+
+int Create_File(char* filename, char* inputarray[MAX_FILEPATH_RECORDED]);

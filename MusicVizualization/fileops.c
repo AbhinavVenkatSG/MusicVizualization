@@ -26,3 +26,24 @@ int Mem_filepath_free(char* inputarray[MAX_FILEPATH_RECORDED]) {
 	}
 	return 0;
 }
+
+
+int Create_File(char* filename, char* inputarray[MAX_FILEPATH_RECORDED]) {
+	FILE* fp = fopen(filename, "r");
+	if (!fp) {
+		fprintf(stderr, "Doesn't work bitch");
+		return 1;
+	}
+
+	int count = 0;
+	char FILENAME[MAX_FILE_CHAR_LENGTH];
+	while (fgets(filename, sizeof(filename), fp) && count <= MAX_FILEPATH_RECORDED) {
+		if (FileExists(filename) && IsFileExtension(FILENAME, ".wav")) {
+			//int TextCopy(char playlist[MAX_FILE_CHAR_LENGTH], const char* filename);
+			//fopen("playlist.txt", "w");
+			//count++;
+		}
+
+		exit(EXIT_FAILURE);
+	}
+}
