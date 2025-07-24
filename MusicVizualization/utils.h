@@ -7,15 +7,13 @@
 #define MAX_FILE_SIZE 1024
 #define SAMPLES_PER_FRAME 1024
 
-bool IsArgValid(int argc);				//devki - done
+void IsArgValid(int argc, char* argv[]);				//devki - done
 char* convertArgToLower(char* argv);	//devki - done
 char* getFileExtension(char* inputFile); //devki - done
 bool validateFilePath(char* inputFile); //tanveer 
 
-
-
 int DragnDrop(char* filearray[MAX_FILEPATH_RECORDED], int* filepathcounter);
-
+void DrawWaveform(Wave wave, float timePlayed, float duration, int screenWidth, int screenHeight);
 
 
 
@@ -30,4 +28,3 @@ int usagePrompt();
 
 
 
-void DrawWaveform(Wave wave, float timePlayed, float duration, int screenWidth, int screenHeight);

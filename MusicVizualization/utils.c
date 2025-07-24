@@ -9,14 +9,12 @@
 
 #define ARGMAX 10
 
-bool IsArgValid(int argc) {
-
-	if (argc == 2) return true;
-
-	else {
-		return false;
-	}
-}
+void IsArgValid(int argc, char* argv[]) {
+	if (argc < 2) {
+		fprintf(stderr, "Usage: %s <play|create>\n", argv[0]);
+		return 1;
+	}	
+}   //done
 
 char* convertArgToLower(char* argv) {
 	char arg1_lower[ARGMAX];
@@ -24,7 +22,7 @@ char* convertArgToLower(char* argv) {
 	for (int i = 0; i < sizeof(arg1_lower); i++) {
 		arg1_lower[i] = tolower(arg1_lower[i]);
 	}		
-	arg1_lower[ARGMAX] = '\0';
+	arg1_lower[ARGMAX-1] = '\0';
 }
 
 char* getFileExtension(char* inputFile) {
@@ -34,31 +32,6 @@ char* getFileExtension(char* inputFile) {
 
 bool validateFilePath(char* inputFile) {
 
-}
-
-
-
-
-
-
-
-
-//extra stuff
-int invalidFilePath() {
-	fprintf(stderr, "Invalid File Path.");
-	return 1;
-}
-int invalidFileFormat() {
-	fprintf(stderr, "invalid file format");
-	return 1;
-}
-int invalidInstruction() {
-	fprintf(stderr, "instruction invalid.");
-	return 1;
-}
-int usagePrompt() {
-	fprintf(stderr, "usage: porgrame name instruction. ");
-	return 1;
 }
 
 int filepathcounter = 0;
@@ -84,9 +57,6 @@ int DragnDrop(char* filearray[MAX_FILEPATH_RECORDED], int* filepathcounter) {
 	}
 	return filesAdded;
 }
-
-
-
 
 void DrawWaveform(Wave wave, float timePlayed, float duration, int screenWidth, int screenHeight) {
 	if (wave.frameCount == 0 || wave.data == NULL) return;
@@ -115,3 +85,31 @@ void DrawWaveform(Wave wave, float timePlayed, float duration, int screenWidth, 
 		DrawLine((int)x1, (int)y1, (int)x2, (int)y2, DARKBLUE);
 	}
 }
+
+
+
+
+
+//extra stuff
+int invalidFilePath() {
+	fprintf(stderr, "Invalid File Path.");
+	return 1;
+}
+int invalidFileFormat() {
+	fprintf(stderr, "invalid file format");
+	return 1;
+}
+int invalidInstruction() {
+	fprintf(stderr, "instruction invalid.");
+	return 1;
+}
+int usagePrompt() {
+	fprintf(stderr, "usage: porgrame name instruction. ");
+	return 1;
+}
+
+
+
+
+
+
