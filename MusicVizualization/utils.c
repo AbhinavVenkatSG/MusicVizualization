@@ -115,3 +115,5 @@ void DrawWaveform(Wave wave, float timePlayed, float duration, int screenWidth, 
 		DrawLine((int)x1, (int)y1, (int)x2, (int)y2, DARKBLUE);
 	}
 }
+
+//test commit
