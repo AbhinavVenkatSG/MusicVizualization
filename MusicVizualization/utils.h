@@ -8,7 +8,7 @@
 #define SAMPLES_PER_FRAME 1024
 
 bool IsArgValid(int argc);				//devki - done
-char* convertArgToLower(char* argv);	//devki - done
+void convertArgToLower(const char* arg, char* output);	//devki - done
 char* getFileExtension(char* inputFile); //devki - done
 bool validateFilePath(char* inputFile); //tanveer 
 
@@ -30,4 +30,4 @@ int usagePrompt();
 
 
 
-void DrawWaveform(Wave wave, float timePlayed, float duration, int screenWidth, int screenHeight);
+//void DrawWaveform(Wave wave, float timePlayed, float duration, int screenWidth, int screenHeight);

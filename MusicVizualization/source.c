@@ -1,56 +1,34 @@
-#define CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 #include "raylib.h"
-#include "fileops.h"
 #include "utils.h"
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
-
-#define MAX_FILEPATH_RECORDED 10
-#define ARGMAX 10
-#define MAX_FILE_SIZE 1024
-#define SAMPLES_PER_FRAME 1024
-#define SAMPLES_PER_FRAME 1024
+#include <math.h>
+#include <ctype.h>
 
 
+#define FFT_SIZE 1024            
+#define SAMPLE_RATE 44100        
+#define MAX_FILEPATH_RECORDED 10  
+#define MAX_FILE_SIZE 1024       
+#define ARGMAX 128
 
 
-int main(int argc, char* argv[]){
-    if (argc < 2) {
-        fprintf(stderr, "Usage: %s <play|create>\n", argv[0]);
-        return 1;
+
+
+int main(int argc, char* argv[]) {
+    char arg1_lower[ARGMAX];
+
+    if (!IsArgValid(argc)) {
+        fprintf(stderr, "Exiting Program. No Command Line Argument Passed (Main)\n");
+        exit(EXIT_FAILURE);
     }
 
-    char* filepath[MAX_FILEPATH_RECORDED] = { 0 };
-    int filepathCounter = 0;
+    convertArgToLower(argv[1], arg1_lower);  
 
-    if (memfilepath(filepath) != 0) {
-        return 1;
-    }
-    const int w_width = 800;
-    const int w_height = 450;
+    printf("Command: %s\n", arg1_lower);
+    printf("This is a test\n");
 
-    InitAudioDevice();
-    SetTargetFPS(60);
-
-
-    const char* instruction = argv[1];
-
-    if (strcmp(instruction, "play") == 0) {
-
-        InitWindow(w_width, w_height, "Music Visualizer");
-
-
-        Music music = { 0 };
-        Wave wave = { 0 };
-        bool musicLoaded = false;
-        float duration = 0.0f;
-
-        while (!WindowShouldClose()) {
-            if (IsFileDropped()) {
-                DragnDrop(filepath, &filepathCounter);
-            }
-        }
-        return 0;
-    }
-
+    return 0;
+}
