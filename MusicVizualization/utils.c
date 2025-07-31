@@ -9,7 +9,7 @@
 
 #define ARGMAX 10
 
-bool IsArgValid(int argc) {
+bool Is_Arg_Valid(int argc) {
 
 	if (argc == 2) return true;
 
@@ -65,27 +65,6 @@ int usagePrompt() {
 
 int filepathcounter = 0;
 
-//int DragnDrop(char* filearray[MAX_FILEPATH_RECORDED], int* filepathcounter) {
-//	if (!IsFileDropped()) {
-//		fprintf(stderr, "Files dropped are not recognized (DragnDrop");
-//		return 1;
-//	}
-//	FilePathList droppedFiles = LoadDroppedFiles();
-//	int filesAdded = 0;
-//
-//	for (int i = 0; i < droppedFiles.count; i++) {
-//		if (*filepathcounter >= MAX_FILEPATH_RECORDED) {
-//			printf("File limit reached. Cannot add more.\n");
-//			break;
-//		}
-//		TextCopy(filearray[*filepathcounter], droppedFiles.paths[i]);
-//		printf("Added dropped file: %s\n", filearray[*filepathcounter]);
-//
-//		(*filepathcounter)++;
-//		filesAdded++;
-//	}
-//	return filesAdded;
-//}
 
 
 

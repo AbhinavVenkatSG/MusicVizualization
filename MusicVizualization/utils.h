@@ -7,14 +7,13 @@
 #define MAX_FILE_SIZE 1024
 #define SAMPLES_PER_FRAME 1024
 
-bool IsArgValid(int argc);				//devki - done
+bool Is_Arg_Valid(int argc);				//devki - done
 void convertArgToLower(const char* arg, char* output);	//devki - done
 char* getFileExtension(char* inputFile); //devki - done
 bool validateFilePath(char* inputFile); //tanveer 
 
 
 
-int DragnDrop(char* filearray[MAX_FILEPATH_RECORDED], int* filepathcounter);
 
 
 
