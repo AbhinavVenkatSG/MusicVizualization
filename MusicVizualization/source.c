@@ -27,8 +27,18 @@ int main(int argc, char* argv[]) {
 
     convertArgToLower(argv[1], arg1_lower);  
 
-    printf("Command: %s\n", arg1_lower);
-    printf("This is a test\n");
+    fprintf(stdout,"Command: %s\n", arg1_lower);
+    fprintf(stdout,"This is a test\n");
+
+    if (strcmp(arg1_lower, "Play") == 0) {
+        fprintf(stdout,"The action is Play\n");
+    }
+    else if (strcmp(arg1_lower, "Pause") == 0) {
+        fprintf(stdout,"The action is Pause\n");
+    }
+    else {
+        fprintf(stdout,"Unknown action\n");
+    }
 
     return 0;
 }
