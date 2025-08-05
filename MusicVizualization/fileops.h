@@ -4,10 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define MAX_FILE_CHAR_LENGTH 512
+#define MAX_PATH_LENGTH 512
 
 
-void Drag_N_Drop(char filearray[MAX_FILEPATH_RECORDED][MAX_PATH_LENGTH], int* filepathcounter);
+void Drag_N_Drop(char filearray[MAX_FILEPATH_RECORDED][512], int* filepathcounter);
 
 
-int Create_File(char* filename, char* inputarray[MAX_FILEPATH_RECORDED]);
+int Create_File(const char* filename, char filearray[MAX_FILEPATH_RECORDED][512], int filepathcount);

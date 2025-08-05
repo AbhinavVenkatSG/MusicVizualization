@@ -7,25 +7,24 @@
 
 
 
-int Create_File(char* filename, char* inputarray[MAX_FILEPATH_RECORDED]) {
-	FILE* fp = fopen(filename, "r");
+int Create_File(const char* filename, char filearray[MAX_FILEPATH_RECORDED][MAX_PATH_LENGTH], int filepathcount) {
+	FILE* fp = fopen(filename, "w");
 	if (!fp) {
-		fprintf(stderr, "Doesn't work bitch");
+		fprintf(stderr, "Error: Could not create file '%s'\n", filename);
 		return 1;
 	}
 
-	int count = 0;
-	char FILENAME[MAX_FILE_CHAR_LENGTH];
-	while (fgets(filename, sizeof(filename), fp) && count <= MAX_FILEPATH_RECORDED) {
-		if (FileExists(filename) && IsFileExtension(FILENAME, ".wav")) {
-			//int TextCopy(char playlist[MAX_FILE_CHAR_LENGTH], const char* filename);
-			//fopen("playlist.txt", "w");
-			//count++;
+	for (int i = 0; i < filepathcount; i++) {
+		if (FileExists(filearray[i]) && IsFileExtension(filearray[i], ".wav")) {
+			fprintf(fp, "%s\n", filearray[i]);
 		}
-
-		exit(EXIT_FAILURE);
 	}
+
+	fclose(fp);
+	return 0;
 }
+
+
 
 void Drag_N_Drop(char filearray[MAX_FILEPATH_RECORDED][MAX_PATH_LENGTH], int* filepathcounter) {
 	if (IsFileDropped()) {
