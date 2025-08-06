@@ -35,7 +35,7 @@ int main(int argc, char** argv)
     plug_init(&plug, file_path);
     while (!WindowShouldClose()) {
         if (IsKeyPressed(KEY_R)) {
-            // Optionally, re-initialize plug if needed
+            // re-initialize plug if issue (just so i dont forgor)
             plug_init(&plug, file_path);
         }
         plug_update(&plug);

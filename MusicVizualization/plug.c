@@ -4,10 +4,8 @@
 #include "plug.h"
 #define M_PI 3.14159265358979323846
 
-// --- Custom Complex Number Implementation ---
-
-
-// --- End Custom Complex Number Implementation ---
+const char* file_path = "C:\\Users\\abhianu\\OneDrive\\Desktop\\SKAL.wav";
+float timePlayed = 0.0f;
 
 Complex complex_new(float re, float im) {
     Complex z = { re, im };
@@ -26,7 +24,6 @@ Complex complex_mul(Complex a, Complex b) {
     return complex_new(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re);
 }
 
-// exp(i*theta) = cos(theta) + i*sin(theta)
 Complex complex_exp(float theta) {
     return complex_new(cosf(theta), sinf(theta));
 }
@@ -49,7 +46,6 @@ typedef struct {
     float right;
 } Frame;
 
-// Ported from https://rosettacode.org/wiki/Fast_Fourier_transform#Python
 void fft(float in[], size_t stride, Complex out[], size_t n)
 {
     assert(n > 0);
@@ -85,7 +81,6 @@ void callback(void* bufferData, unsigned int frames)
 
     Frame* fs = bufferData;
 
-    // Copy the left channel audio samples into the `in` array
     for (size_t i = 0; i < frames; ++i) {
         in[i] = fs[i].left;
     }
@@ -118,6 +113,7 @@ void plug_init(Plug* plug, const char* file_path)
     AttachAudioStreamProcessor(plug->music.stream, callback);
 }
 
+
 void plug_update(Plug* plug)
 {
     if (!plug->music.stream.sampleRate) {
@@ -125,10 +121,10 @@ void plug_update(Plug* plug)
         return;
     }
 
-    // Update the music stream
+    
     UpdateMusicStream(plug->music);
 
-    // Handle spacebar pause/resume
+    
     if (IsKeyPressed(KEY_SPACE)) {
         if (IsMusicStreamPlaying(plug->music)) {
             PauseMusicStream(plug->music);
@@ -141,7 +137,6 @@ void plug_update(Plug* plug)
     int w = GetRenderWidth();
     int h = GetRenderHeight();
 
-    // Start drawing
     BeginDrawing();
     ClearBackground(CLITERAL(Color) { 0x18, 0x18, 0x18, 0xFF });
 
@@ -153,7 +148,6 @@ void plug_update(Plug* plug)
         if (max_amp_local < a) max_amp_local = a;
     }
 
-    // For logarithmic scaling
     float step = 1.06f;
     size_t m = 0;
     for (float f = 20.0f; (size_t)f < N; f *= step) {
@@ -175,6 +169,20 @@ void plug_update(Plug* plug)
         m += 1;
     }
 
-    // End drawing
+    float timePlayed = GetMusicTimePlayed(plug->music) / GetMusicTimeLength(plug->music);
+    if (timePlayed > 1.0f) timePlayed = 1.0f;
+
+    int barHeight = 12;
+    int barY = h - 50;
+    DrawRectangle(w / 4, barY, 400, barHeight, LIGHTGRAY);
+    DrawRectangle(w / 4, barY, (int)(timePlayed * 400.0f), barHeight, BLUE);
+    DrawRectangleLines(w / 4, barY, 400, barHeight, GRAY);
+
+    int textY = barY - 40;
+    DrawText("Now Playing:", w / 4, textY - 20, 20, LIGHTGRAY);
+
+    const char* name = GetFileNameWithoutExt(file_path);
+    DrawText(name, w / 4, textY, 20, BLUE);
+
     EndDrawing();
 }
