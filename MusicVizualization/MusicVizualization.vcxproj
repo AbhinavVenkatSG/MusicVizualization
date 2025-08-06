@@ -128,11 +128,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="fileops.c" />
+    <ClCompile Include="plug.c" />
     <ClCompile Include="source.c" />
     <ClCompile Include="utils.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="fileops.h" />
+    <ClInclude Include="plug.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
