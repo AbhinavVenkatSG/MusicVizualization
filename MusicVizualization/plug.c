@@ -5,12 +5,15 @@
 #include "plug.h"
 
 #define M_PI 3.14159265358979323846
-#define N (1 << 15)
+#define N 2048
 
 typedef struct {
     float left;
     float right;
 } Frame;
+
+float audioBuffer[2 * N] = { 0 };
+size_t audioBufferPos = 0;
 
 float in[N];
 Complex out[N];
@@ -75,10 +78,23 @@ float amp(Complex z)
 
 void callback(void* bufferData, unsigned int frames)
 {
-    if (frames > N) frames = N;
     Frame* fs = bufferData;
-    for (size_t i = 0; i < frames; ++i) {
-        in[i] = fs[i].left;
+    for (unsigned int i = 0; i < frames; ++i) {
+        audioBuffer[audioBufferPos] = fs[i].left;
+        audioBufferPos = (audioBufferPos + 1) % (2 * N);
+    }
+}
+
+void fillFFTInput()
+{
+    size_t start = (audioBufferPos + 2 * N - N) % (2 * N);
+    for (size_t i = 0; i < N; ++i) {
+        in[i] = audioBuffer[(start + i) % (2 * N)];
+    }
+
+    for (size_t i = 0; i < N; ++i) {
+        float w = 0.5f * (1 - cosf(2 * (float)M_PI * i / (N - 1)));
+        in[i] *= w;
     }
 }
 
@@ -123,13 +139,13 @@ void plug_update(Plug* plug)
         else ResumeMusicStream(plug->music);
     }
 
-
     int w = GetRenderWidth();
     int h = GetRenderHeight();
 
     BeginDrawing();
     ClearBackground(CLITERAL(Color) { 0x18, 0x18, 0x18, 0xFF });
 
+    fillFFTInput();
     fft(in, 1, out, N);
 
     float max_amp_local = 0.0f;
@@ -137,53 +153,100 @@ void plug_update(Plug* plug)
         float a = amp(out[i]);
         if (max_amp_local < a) max_amp_local = a;
     }
+    if (max_amp_local < 1e-6f) max_amp_local = 1.0f;
 
     float step = 1.06f;
-    size_t m = 0;
-    for (float f = 20.0f; (size_t)f < N; f *= step) {
-        m += 1;
+    float minFreq = 20.0f;
+    float maxFreq = 155.0f;
+
+    size_t bands = 0;
+    for (float f = minFreq; f < maxFreq && (size_t)f < N / 2; f *= step) {
+        bands++;
     }
 
-    float cell_width = (float)w / m;
-    m = 0;
-    for (float f = 20.0f; (size_t)f < N; f *= step) {
+    float cell_width = (float)w / bands;
+
+    static float prevAmps[1024] = { 0 };
+    static bool firstRun = true;
+    if (firstRun) {
+        for (size_t i = 0; i < bands; i++) prevAmps[i] = 0.0f;
+        firstRun = false;
+    }
+
+    size_t m = 0;
+    float barMaxHeight = h * 0.5f;
+
+    for (float f = minFreq; f < maxFreq && (size_t)f < N / 2 && m < bands; f *= step, m++) {
         float f1 = f * step;
+        if (f1 > maxFreq) f1 = maxFreq;
         float a = 0.0f;
-        for (size_t q = (size_t)f; q < N && q < (size_t)f1; ++q) {
+        size_t startIdx = (size_t)f;
+        size_t endIdx = (size_t)f1;
+        if (endIdx >= N / 2) endIdx = N / 2 - 1;
+        for (size_t q = startIdx; q <= endIdx; ++q) {
             a += amp(out[q]);
         }
-        a /= (size_t)f1 - (size_t)f + 1;
+        a /= (float)(endIdx - startIdx + 1);
         float t = a / max_amp_local;
-        DrawRectangle(m * cell_width, h / 2 - h / 2 * t, cell_width, h / 2 * t, BLUE);
-        m += 1;
+        if (t > 1.0f) t = 1.0f;
+
+        float smoothT = prevAmps[m] * 0.7f + t * 0.3f;
+        prevAmps[m] = smoothT;
+
+        float barHeight = smoothT * barMaxHeight;
+
+        Color col = (Color){
+            0,
+            (unsigned char)(128 + smoothT * 127),
+            255,
+            255
+        };
+
+        DrawRectangle(m * cell_width, h / 2 - barHeight, (int)(cell_width * 0.85f), (int)barHeight, col);
+    }
+
+    for (size_t i = 0; i < bands; i += 5) {
+        float freq = minFreq * powf(step, i);
+        char label[16];
+        if (freq >= 1000.0f)
+            snprintf(label, sizeof(label), "%.1fkHz", freq / 1000.0f);
+        else
+            snprintf(label, sizeof(label), "%.0fHz", freq);
+        int x = (int)(i * cell_width);
+        DrawText(label, x, h / 2 + 5, 10, LIGHTGRAY);
     }
 
     float timePlayed = GetMusicTimePlayed(plug->music) / GetMusicTimeLength(plug->music);
     if (timePlayed > 1.0f) timePlayed = 1.0f;
 
-    int barHeight = 12;
-    int barY = h - 100;
-    DrawRectangle(w / 4, barY, 400, barHeight, LIGHTGRAY);
-    DrawRectangle(w / 4, barY, (int)(timePlayed * 400.0f), barHeight, BLUE);
-    DrawRectangleLines(w / 4, barY, 400, barHeight, GRAY);
+    int barHeight = 16;
+    int barY = h - 60;
+    int barX = w / 6;
+    int barWidth = w * 2 / 3;
 
-    int textY = barY - 40;
-    DrawText("Now Playing:", w / 4, textY - 20, 20, LIGHTGRAY);
+    DrawRectangle(barX, barY, barWidth, barHeight, DARKGRAY);
+    for (int i = 0; i < (int)(timePlayed * barWidth); i++) {
+        unsigned char alpha = (unsigned char)(255 * (1.0f - (float)i / barWidth));
+        DrawPixel(barX + i, barY + barHeight / 2, (Color) { 0, 150, 255, alpha });
+    }
+    DrawRectangleLines(barX, barY, barWidth, barHeight, GRAY);
+
+    DrawText("Now Playing:", barX, barY - 40, 20, LIGHTGRAY);
     const char* name = GetFileNameWithoutExt(file_path);
-    DrawText(name, w / 4, textY, 20, WHITE);
+    DrawText(name, barX, barY - 20, 24, WHITE);
 
-    int btnWidth = w/6;
-    int btnHeight = 40;
+    int btnWidth = w / 8;
+    int btnHeight = 44;
     int btnY = h - 100;
 
     Rectangle pauseBtn = { 50, btnY, btnWidth, btnHeight };
-    Rectangle restartBtn = { w-190, btnY, btnWidth, btnHeight };
+    Rectangle restartBtn = { w - btnWidth - 50, btnY, btnWidth, btnHeight };
 
     DrawRectangleRec(pauseBtn, BLUE);
-    DrawText(IsMusicStreamPlaying(plug->music) ? "Pause" : "Resume", pauseBtn.x + 10, pauseBtn.y + 10, 20, WHITE);
+    DrawText(IsMusicStreamPlaying(plug->music) ? "Pause" : "Resume", pauseBtn.x + 15, pauseBtn.y + 12, 20, WHITE);
 
     DrawRectangleRec(restartBtn, BLUE);
-    DrawText("Restart", restartBtn.x + 25, restartBtn.y + 10, 20, WHITE);
+    DrawText("Restart", restartBtn.x + 20, restartBtn.y + 12, 20, WHITE);
 
     Vector2 mouse = GetMousePosition();
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
