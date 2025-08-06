@@ -1,11 +1,21 @@
 #include <assert.h>
 #include <stdio.h>
 #include <math.h>
+#include <raylib.h>
 #include "plug.h"
+
 #define M_PI 3.14159265358979323846
+#define N (1 << 15)
+
+typedef struct {
+    float left;
+    float right;
+} Frame;
+
+float in[N];
+Complex out[N];
 
 const char* file_path = "C:\\Users\\abhianu\\OneDrive\\Desktop\\SKAL.wav";
-float timePlayed = 0.0f;
 
 Complex complex_new(float re, float im) {
     Complex z = { re, im };
@@ -36,20 +46,9 @@ float complex_imag(Complex z) {
     return z.im;
 }
 
-#define N (1<<15)
-
-float in[N];
-Complex out[N];
-
-typedef struct {
-    float left;
-    float right;
-} Frame;
-
 void fft(float in[], size_t stride, Complex out[], size_t n)
 {
     assert(n > 0);
-
     if (n == 1) {
         out[0] = complex_new(in[0], 0.0f);
         return;
@@ -71,16 +70,13 @@ float amp(Complex z)
 {
     float a = fabsf(complex_real(z));
     float b = fabsf(complex_imag(z));
-    if (a < b) return b;
-    return a;
+    return (a < b) ? b : a;
 }
 
 void callback(void* bufferData, unsigned int frames)
 {
     if (frames > N) frames = N;
-
     Frame* fs = bufferData;
-
     for (size_t i = 0; i < frames; ++i) {
         in[i] = fs[i].left;
     }
@@ -113,7 +109,6 @@ void plug_init(Plug* plug, const char* file_path)
     AttachAudioStreamProcessor(plug->music.stream, callback);
 }
 
-
 void plug_update(Plug* plug)
 {
     if (!plug->music.stream.sampleRate) {
@@ -121,18 +116,13 @@ void plug_update(Plug* plug)
         return;
     }
 
-    
     UpdateMusicStream(plug->music);
 
-    
     if (IsKeyPressed(KEY_SPACE)) {
-        if (IsMusicStreamPlaying(plug->music)) {
-            PauseMusicStream(plug->music);
-        }
-        else {
-            ResumeMusicStream(plug->music);
-        }
+        if (IsMusicStreamPlaying(plug->music)) PauseMusicStream(plug->music);
+        else ResumeMusicStream(plug->music);
     }
+
 
     int w = GetRenderWidth();
     int h = GetRenderHeight();
@@ -156,7 +146,6 @@ void plug_update(Plug* plug)
 
     float cell_width = (float)w / m;
     m = 0;
-
     for (float f = 20.0f; (size_t)f < N; f *= step) {
         float f1 = f * step;
         float a = 0.0f;
@@ -173,16 +162,40 @@ void plug_update(Plug* plug)
     if (timePlayed > 1.0f) timePlayed = 1.0f;
 
     int barHeight = 12;
-    int barY = h - 50;
+    int barY = h - 100;
     DrawRectangle(w / 4, barY, 400, barHeight, LIGHTGRAY);
     DrawRectangle(w / 4, barY, (int)(timePlayed * 400.0f), barHeight, BLUE);
     DrawRectangleLines(w / 4, barY, 400, barHeight, GRAY);
 
     int textY = barY - 40;
     DrawText("Now Playing:", w / 4, textY - 20, 20, LIGHTGRAY);
-
     const char* name = GetFileNameWithoutExt(file_path);
-    DrawText(name, w / 4, textY, 20, BLUE);
+    DrawText(name, w / 4, textY, 20, WHITE);
+
+    int btnWidth = w/6;
+    int btnHeight = 40;
+    int btnY = h - 100;
+
+    Rectangle pauseBtn = { 50, btnY, btnWidth, btnHeight };
+    Rectangle restartBtn = { w-190, btnY, btnWidth, btnHeight };
+
+    DrawRectangleRec(pauseBtn, BLUE);
+    DrawText(IsMusicStreamPlaying(plug->music) ? "Pause" : "Resume", pauseBtn.x + 10, pauseBtn.y + 10, 20, WHITE);
+
+    DrawRectangleRec(restartBtn, BLUE);
+    DrawText("Restart", restartBtn.x + 25, restartBtn.y + 10, 20, WHITE);
+
+    Vector2 mouse = GetMousePosition();
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        if (CheckCollisionPointRec(mouse, pauseBtn)) {
+            if (IsMusicStreamPlaying(plug->music)) PauseMusicStream(plug->music);
+            else ResumeMusicStream(plug->music);
+        }
+        if (CheckCollisionPointRec(mouse, restartBtn)) {
+            StopMusicStream(plug->music);
+            PlayMusicStream(plug->music);
+        }
+    }
 
     EndDrawing();
 }
