@@ -11,7 +11,7 @@ Plug plug = { 0 };
 
 int main(int argc, char** argv)
 {
-    const char* file_path = "C:\\Users\\abhianu\\OneDrive\\Desktop\\SKAL.wav";
+    const char* file_path = "C:\\Users\\d_nsh\\OneDrive\\Desktop\\song.wav";
 
     InitWindow(800, 600, "Music Visualizer");
     SetTargetFPS(60);

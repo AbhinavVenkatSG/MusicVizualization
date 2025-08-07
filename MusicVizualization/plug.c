@@ -18,7 +18,7 @@ size_t audioBufferPos = 0;
 float in[N];
 Complex out[N];
 
-const char* file_path = "C:\\Users\\abhianu\\OneDrive\\Desktop\\SKAL.wav";
+const char* file_path = "C:\\Users\\d_nsh\\OneDrive\\Desktop\\song.wav";
 
 Complex complex_new(float re, float im) {
     Complex z = { re, im };
@@ -138,7 +138,7 @@ void plug_update(Plug* plug)
         if (IsMusicStreamPlaying(plug->music)) PauseMusicStream(plug->music);
         else ResumeMusicStream(plug->music);
     }
-
+    
     int w = GetRenderWidth();
     int h = GetRenderHeight();
 
@@ -202,7 +202,7 @@ void plug_update(Plug* plug)
             255
         };
 
-        DrawRectangle(m * cell_width, h / 2 - barHeight, (int)(cell_width * 0.85f), (int)barHeight, col);
+        DrawRectangle(m * cell_width, h / 2 - barHeight, (int)(cell_width * 0.85f), (int)barHeight, col);  // frequency bars
     }
 
     for (size_t i = 0; i < bands; i += 5) {
@@ -213,7 +213,7 @@ void plug_update(Plug* plug)
         else
             snprintf(label, sizeof(label), "%.0fHz", freq);
         int x = (int)(i * cell_width);
-        DrawText(label, x, h / 2 + 5, 10, LIGHTGRAY);
+        DrawText(label, x, h / 2 + 5, 10, LIGHTGRAY);               //frequencies
     }
 
     float timePlayed = GetMusicTimePlayed(plug->music) / GetMusicTimeLength(plug->music);
@@ -224,29 +224,35 @@ void plug_update(Plug* plug)
     int barX = w / 6;
     int barWidth = w * 2 / 3;
 
-    DrawRectangle(barX, barY, barWidth, barHeight, DARKGRAY);
+    DrawRectangleLines(barX, barY - 150, barWidth, barHeight, GRAY); 
+           // progress bar
     for (int i = 0; i < (int)(timePlayed * barWidth); i++) {
         unsigned char alpha = (unsigned char)(255 * (1.0f - (float)i / barWidth));
-        DrawPixel(barX + i, barY + barHeight / 2, (Color) { 0, 150, 255, alpha });
+        DrawRectangle(barX, barY - 150, i , barHeight, LIGHTGRAY);
+       //DrawPixel(barX + i, (barY -150) + barHeight / 2, (Color) { 0, 150, 255, alpha });
     }
-    DrawRectangleLines(barX, barY, barWidth, barHeight, GRAY);
+           // progressing progress bar
 
-    DrawText("Now Playing:", barX, barY - 40, 20, LIGHTGRAY);
+    DrawText("Now Playing:", barX + 200, barY - 120, 20, LIGHTGRAY);
     const char* name = GetFileNameWithoutExt(file_path);
-    DrawText(name, barX, barY - 20, 24, WHITE);
-
+    DrawText(name, barX + 240, barY - 100, 24, LIGHTGRAY) ;
+    DrawText("Press esc to exit player.", barX + 150, barY - 70, 20, LIGHTGRAY);
+     
     int btnWidth = w / 8;
     int btnHeight = 44;
     int btnY = h - 100;
 
     Rectangle pauseBtn = { 50, btnY, btnWidth, btnHeight };
     Rectangle restartBtn = { w - btnWidth - 50, btnY, btnWidth, btnHeight };
+    
 
     DrawRectangleRec(pauseBtn, BLUE);
     DrawText(IsMusicStreamPlaying(plug->music) ? "Pause" : "Resume", pauseBtn.x + 15, pauseBtn.y + 12, 20, WHITE);
 
     DrawRectangleRec(restartBtn, BLUE);
-    DrawText("Restart", restartBtn.x + 20, restartBtn.y + 12, 20, WHITE);
+    DrawText("Restart", restartBtn.x + 10, restartBtn.y + 12, 20, WHITE);
+    
+
 
     Vector2 mouse = GetMousePosition();
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
