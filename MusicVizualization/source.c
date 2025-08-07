@@ -95,7 +95,7 @@ int main(void) {
     currentSongIndex = 0;
     plug_init(&plug, playlist[currentSongIndex]);
 
-    shuffleMode = 0;
+    shuffleMode = 1;
 
     bool songEnded = false;
 
