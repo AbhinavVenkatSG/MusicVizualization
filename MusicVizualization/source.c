@@ -39,6 +39,7 @@ int load_playlist_from_file(const char* filename) {
         strcpy(path, line);
         playlist[playlist_size++] = path;
     }
+
     fclose(file);
     return playlist_size;
 }
@@ -67,34 +68,56 @@ void play_next_song() {
     plug_init(&plug, playlist[currentSongIndex]);
 }
 
+bool WaitForPlaylistDrop(char* outPath, int maxLen) {
+    while (!WindowShouldClose()) {
+        BeginDrawing();
+        ClearBackground(BLACK);
+        DrawText("Drop a playlist .txt file to start", 100, 250, 20, RAYWHITE);
+        EndDrawing();
+
+        if (IsFileDropped()) {
+            FilePathList dropped = LoadDroppedFiles();
+            if (dropped.count > 0) {
+                const char* droppedFile = dropped.paths[0];
+
+                if (strstr(droppedFile, ".txt") != NULL) {
+                    strncpy(outPath, droppedFile, maxLen - 1);
+                    outPath[maxLen - 1] = '\0';
+                    UnloadDroppedFiles(dropped);
+                    return true;
+                }
+                else {
+                    fprintf(stderr, "Dropped file is not a .txt file.\n");
+                }
+            }
+            UnloadDroppedFiles(dropped);
+        }
+    }
+
+    return false;
+}
+
 int main(void) {
     srand((unsigned int)time(NULL));
+    char playlistFilePath[MAX_PATH_LEN] = { 0 };
 
-    char playlistFilePath[MAX_PATH_LEN];
-    printf("Enter path to playlist text file: ");
-    if (fgets(playlistFilePath, sizeof(playlistFilePath), stdin) == NULL) {
-        fprintf(stderr, "Failed to read input\n");
-        return 1;
-    }
-    playlistFilePath[strcspn(playlistFilePath, "\r\n")] = 0;
-
-    if (!load_playlist_from_file(playlistFilePath)) {
-        fprintf(stderr, "No songs loaded. Exiting.\n");
-        return 1;
-    }
-
-    if (playlist_size == 0) {
-        fprintf(stderr, "Playlist is empty. Exiting.\n");
-        return 1;
-    }
-
-    InitWindow(800, 600, "Music Player with Visualizer");
-    InitAudioDevice();
+    InitWindow(800, 600, "Music  Visualizer");
     SetTargetFPS(60);
 
+    if (!WaitForPlaylistDrop(playlistFilePath, MAX_PATH_LEN)) {
+        CloseWindow();
+        return 1;
+    }
+
+    if (!load_playlist_from_file(playlistFilePath) || playlist_size == 0) {
+        fprintf(stderr, "Failed to load valid playlist. Exiting.\n");
+        CloseWindow();
+        return 1;
+    }
+
+    InitAudioDevice();
     currentSongIndex = 0;
     plug_init(&plug, playlist[currentSongIndex]);
-
     shuffleMode = 1;
 
     bool songEnded = false;
