@@ -18,36 +18,15 @@ size_t audioBufferPos = 0;
 float in[N];
 Complex out[N];
 
-const char* file_path = "C:\\Users\\d_nsh\\OneDrive\\Desktop\\song.wav";
-
-Complex complex_new(float re, float im) {
-    Complex z = { re, im };
-    return z;
-}
-
-Complex complex_add(Complex a, Complex b) {
-    return complex_new(a.re + b.re, a.im + b.im);
-}
-
-Complex complex_sub(Complex a, Complex b) {
-    return complex_new(a.re - b.re, a.im - b.im);
-}
-
+Complex complex_new(float re, float im) { return (Complex) { re, im }; }
+Complex complex_add(Complex a, Complex b) { return complex_new(a.re + b.re, a.im + b.im); }
+Complex complex_sub(Complex a, Complex b) { return complex_new(a.re - b.re, a.im - b.im); }
 Complex complex_mul(Complex a, Complex b) {
     return complex_new(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re);
 }
-
-Complex complex_exp(float theta) {
-    return complex_new(cosf(theta), sinf(theta));
-}
-
-float complex_real(Complex z) {
-    return z.re;
-}
-
-float complex_imag(Complex z) {
-    return z.im;
-}
+Complex complex_exp(float theta) { return complex_new(cosf(theta), sinf(theta)); }
+float complex_real(Complex z) { return z.re; }
+float complex_imag(Complex z) { return z.im; }
 
 void fft(float in[], size_t stride, Complex out[], size_t n)
 {
@@ -107,13 +86,20 @@ void plug_init(Plug* plug, const char* file_path)
 {
     fprintf(stderr, "Initializing plugin...\n");
 
+    if (plug->music.stream.buffer != NULL) {
+        UnloadMusicStream(plug->music);
+        fprintf(stderr, "Unloaded previous music stream.\n");
+    }
+
+    plug->currentFile = file_path;
     plug->music = LoadMusicStream(file_path);
+
     if (plug->music.stream.sampleRate == 0) {
-        fprintf(stderr, "Error: Failed to load music stream.\n");
+        fprintf(stderr, "Error: Failed to load music stream: %s\n", file_path);
         return;
     }
 
-    fprintf(stderr, "Music loaded successfully:\n");
+    fprintf(stderr, "Music loaded successfully: %s\n", file_path);
     fprintf(stderr, "music.frameCount = %u\n", plug->music.frameCount);
     fprintf(stderr, "music.stream.sampleRate = %u\n", plug->music.stream.sampleRate);
     fprintf(stderr, "music.stream.sampleSize = %u\n", plug->music.stream.sampleSize);
@@ -138,7 +124,7 @@ void plug_update(Plug* plug)
         if (IsMusicStreamPlaying(plug->music)) PauseMusicStream(plug->music);
         else ResumeMusicStream(plug->music);
     }
-    
+
     int w = GetRenderWidth();
     int h = GetRenderHeight();
 
@@ -202,7 +188,7 @@ void plug_update(Plug* plug)
             255
         };
 
-        DrawRectangle(m * cell_width, h / 2 - barHeight, (int)(cell_width * 0.85f), (int)barHeight, col);  // frequency bars
+        DrawRectangle(m * cell_width, h / 2 - barHeight, (int)(cell_width * 0.85f), (int)barHeight, col);
     }
 
     for (size_t i = 0; i < bands; i += 5) {
@@ -213,7 +199,7 @@ void plug_update(Plug* plug)
         else
             snprintf(label, sizeof(label), "%.0fHz", freq);
         int x = (int)(i * cell_width);
-        DrawText(label, x, h / 2 + 5, 10, LIGHTGRAY);               //frequencies
+        DrawText(label, x, h / 2 + 5, 10, LIGHTGRAY);
     }
 
     float timePlayed = GetMusicTimePlayed(plug->music) / GetMusicTimeLength(plug->music);
@@ -224,35 +210,27 @@ void plug_update(Plug* plug)
     int barX = w / 6;
     int barWidth = w * 2 / 3;
 
-    DrawRectangleLines(barX, barY - 150, barWidth, barHeight, GRAY); 
-           // progress bar
-    for (int i = 0; i < (int)(timePlayed * barWidth); i++) {
-        unsigned char alpha = (unsigned char)(255 * (1.0f - (float)i / barWidth));
-        DrawRectangle(barX, barY - 150, i , barHeight, LIGHTGRAY);
-       //DrawPixel(barX + i, (barY -150) + barHeight / 2, (Color) { 0, 150, 255, alpha });
-    }
-           // progressing progress bar
+    DrawRectangleLines(barX, barY - 150, barWidth, barHeight, GRAY);
+    DrawRectangle(barX, barY - 150, (int)(timePlayed * barWidth), barHeight, LIGHTGRAY);
 
     DrawText("Now Playing:", barX + 200, barY - 120, 20, LIGHTGRAY);
-    const char* name = GetFileNameWithoutExt(file_path);
-    DrawText(name, barX + 240, barY - 100, 24, LIGHTGRAY) ;
+
+    const char* name = GetFileNameWithoutExt(plug->currentFile);
+    DrawText(name, barX + 240, barY - 100, 24, LIGHTGRAY);
     DrawText("Press esc to exit player.", barX + 150, barY - 70, 20, LIGHTGRAY);
-     
+
     int btnWidth = w / 8;
     int btnHeight = 44;
     int btnY = h - 100;
 
     Rectangle pauseBtn = { 50, btnY, btnWidth, btnHeight };
     Rectangle restartBtn = { w - btnWidth - 50, btnY, btnWidth, btnHeight };
-    
 
     DrawRectangleRec(pauseBtn, BLUE);
     DrawText(IsMusicStreamPlaying(plug->music) ? "Pause" : "Resume", pauseBtn.x + 15, pauseBtn.y + 12, 20, WHITE);
 
     DrawRectangleRec(restartBtn, BLUE);
     DrawText("Restart", restartBtn.x + 10, restartBtn.y + 12, 20, WHITE);
-    
-
 
     Vector2 mouse = GetMousePosition();
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {

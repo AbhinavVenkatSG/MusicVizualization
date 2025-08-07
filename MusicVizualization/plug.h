@@ -11,6 +11,7 @@ typedef struct {
 
 typedef struct {
     Music music;
+    const char* currentFile;
 } Plug;
 
 void plug_hello(void);
