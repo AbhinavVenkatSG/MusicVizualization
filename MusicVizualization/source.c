@@ -127,7 +127,7 @@ int main(void) {
         }
         if (IsKeyPressed(KEY_S)) {
             shuffleMode = !shuffleMode;
-            printf("Shuffle mode %s\n", shuffleMode ? "OFF" : "ON");
+            printf("Shuffle mode %s\n", shuffleMode ? "ON" : "OFF");
         }
         if (IsKeyPressed(KEY_ESCAPE)) {
             break;
