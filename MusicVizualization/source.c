@@ -3,82 +3,84 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "plug.h"
+#include "utils.h"
 
 #define MAX_SONGS 100
 #define MAX_PATH_LEN 512
+#define ARGMAX 10
 
 const char* playlist[MAX_SONGS] = { 0 };
 int playlist_size = 0;
 int currentSongIndex = 0;
-int shuffleMode = 0;
-
 Plug plug = { 0 };
 
-int load_playlist_from_file(const char* filename) {
-    FILE* file = fopen(filename, "r");
-    if (!file) return 0;
-
-    char line[MAX_PATH_LEN];
-    while (fgets(line, sizeof(line), file) && playlist_size < MAX_SONGS) {
-        line[strcspn(line, "\r\n")] = '\0';
-
-        if (IsFileExtension(line, ".wav")) {
-            char* path = (char*)malloc(strlen(line) + 1);
-            if (path) {
-                strcpy(path, line);
-                playlist[playlist_size++] = path;
-            }
-        }
-    }
-
-    fclose(file);
-    return playlist_size;
-}
 
 int build_playlist_from_dropped_files(FilePathList dropped) {
     playlist_size = 0;
 
     for (int i = 0; i < dropped.count && playlist_size < MAX_SONGS; i++) {
         const char* path = dropped.paths[i];
-
-        if (IsFileExtension(path, ".txt")) {
-            load_playlist_from_file(path);
-        }
-        else if (IsFileExtension(path, ".wav")) {
-            char* copy = (char*)malloc(TextLength(path) + 1);
-            if (copy) {
-                TextCopy(copy, path);
-                playlist[playlist_size++] = copy;
-            }
+        if (IsFileExtension(path, ".wav")) {
+            char* stored = malloc(strlen(path) + 1);
+            if (!stored) continue;
+            strcpy(stored, path);
+            playlist[playlist_size++] = stored;
         }
     }
 
     return playlist_size;
 }
 
+void save_playlist_to_file(const char* filename) {
+    FILE* f = fopen(filename, "w");
+    if (!f) {
+        fprintf(stderr, "Could not write playlist: %s\n", filename);
+        return;
+    }
+
+    for (int i = 0; i < playlist_size; i++) {
+        fprintf(f, "%s\n", playlist[i]);
+    }
+
+    fclose(f);
+    printf("Playlist saved as: %s\n", filename);
+}
+
+int load_playlist_from_file(const char* filename) {
+    FILE* file = fopen(filename, "r");
+    if (!file) {
+        fprintf(stderr, "Failed to open playlist file: %s\n", filename);
+        return 0;
+    }
+
+    char line[MAX_PATH_LEN];
+    playlist_size = 0;
+    while (fgets(line, sizeof(line), file) && playlist_size < MAX_SONGS) {
+        line[strcspn(line, "\r\n")] = 0;
+        if (line[0] == '\0') continue;
+
+        char* path = malloc(strlen(line) + 1);
+        if (!path) {
+            fprintf(stderr, "Memory allocation failed\n");
+            fclose(file);
+            return 0;
+        }
+        strcpy(path, line);
+        playlist[playlist_size++] = path;
+    }
+
+    fclose(file);
+    return playlist_size;
+}
+
 void free_playlist() {
     for (int i = 0; i < playlist_size; i++) {
         free((void*)playlist[i]);
+        playlist[i] = NULL;
     }
     playlist_size = 0;
-}
-
-bool WaitForUserToDropFiles() {
-    while (!WindowShouldClose()) {
-        BeginDrawing();
-        ClearBackground(BLACK);
-        DrawText("Drop .wav file(s) or a .txt playlist", 100, 200, 20, RAYWHITE);
-        EndDrawing();
-
-        if (IsFileDropped()) {
-            FilePathList dropped = LoadDroppedFiles();
-            bool success = build_playlist_from_dropped_files(dropped) > 0;
-            UnloadDroppedFiles(dropped);
-            return success;
-        }
-    }
-    return false;
 }
 
 void play_next_song() {
@@ -87,35 +89,106 @@ void play_next_song() {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 2 || strcmp(argv[1], "play") != 0) {
-        printf("Usage: %s play\n", argv[0]);
+    if (!Is_Arg_Valid(argc)) {
+        printf("Usage: %s [play | create]\n", argv[0]);
         return 1;
     }
+
+    char user_instruction[ARGMAX];
+    convertArgToLower(argv[1], user_instruction);
 
     InitWindow(800, 600, "Music Visualizer");
     SetTargetFPS(60);
 
-    if (!WaitForUserToDropFiles()) {
-        CloseWindow();
-        return 1;
-    }
+    if (strcmp(user_instruction, "create") == 0) {
+        while (!WindowShouldClose()) {
+            BeginDrawing();
+            ClearBackground(BLACK);
+            DrawText("Drop .wav files to create a playlist...", 100, 250, 20, RAYWHITE);
+            EndDrawing();
 
-    InitAudioDevice();
-    plug_init(&plug, playlist[0]);
-
-    while (!WindowShouldClose()) {
-        plug_update(&plug);
-
-        if (IsKeyPressed(KEY_N)) {
-            StopMusicStream(plug.music);
-            play_next_song();
+            if (IsFileDropped()) {
+                FilePathList dropped = LoadDroppedFiles();
+                if (build_playlist_from_dropped_files(dropped) > 0) {
+                    UnloadDroppedFiles(dropped);
+                    break;
+                }
+                UnloadDroppedFiles(dropped);
+            }
         }
 
-        if (IsKeyPressed(KEY_ESCAPE)) break;
+        char name[256];
+        printf("Enter name for your playlist: ");
+        fgets(name, sizeof(name), stdin);
+        name[strcspn(name, "\n")] = '\0';
+
+        char filename[300];
+        snprintf(filename, sizeof(filename), "%s.txt", name);
+        save_playlist_to_file(filename);
     }
 
-    UnloadMusicStream(plug.music);
-    CloseAudioDevice();
+    if (strcmp(user_instruction, "play") == 0 || strcmp(user_instruction, "create") == 0) {
+        while (!WindowShouldClose()) {
+            BeginDrawing();
+            ClearBackground(BLACK);
+            DrawText("Drop a .wav file or .txt playlist to play...", 100, 250, 20, RAYWHITE);
+            EndDrawing();
+
+            if (IsFileDropped()) {
+                FilePathList dropped = LoadDroppedFiles();
+                for (int i = 0; i < dropped.count && playlist_size == 0; i++) {
+                    const char* path = dropped.paths[i];
+                    if (IsFileExtension(path, ".txt")) {
+                        load_playlist_from_file(path);
+                        break;
+                    }
+                    else if (IsFileExtension(path, ".wav")) {
+                        build_playlist_from_dropped_files(dropped);
+                        break;
+                    }
+                }
+                UnloadDroppedFiles(dropped);
+                if (playlist_size > 0) break;
+            }
+        }
+
+        if (playlist_size == 0) {
+            CloseWindow();
+            return 1;
+        }
+
+        InitAudioDevice();
+        currentSongIndex = 0;
+        plug_init(&plug, playlist[currentSongIndex]);
+
+        while (!WindowShouldClose()) {
+            plug_update(&plug);
+
+            float played = GetMusicTimePlayed(plug.music);
+            float length = GetMusicTimeLength(plug.music);
+
+            if (length > 0.0f && played >= length - 0.01f) {
+                StopMusicStream(plug.music);
+                play_next_song();
+            }
+
+            if (IsKeyPressed(KEY_N)) {
+                StopMusicStream(plug.music);
+                play_next_song();
+            }
+
+            if (IsKeyPressed(KEY_R)) {
+                StopMusicStream(plug.music);
+                plug_init(&plug, playlist[currentSongIndex]);
+            }
+
+            if (IsKeyPressed(KEY_ESCAPE)) break;
+        }
+
+        UnloadMusicStream(plug.music);
+        CloseAudioDevice();
+    }
+
     CloseWindow();
     free_playlist();
 

@@ -188,12 +188,12 @@ void plug_update(Plug* plug)
     if (timePlayed > 1.0f) timePlayed = 1.0f;
 
     int barHeight = 16;
-    int barY = h - 60;
+    int barY = h - 70;
     int barX = w / 6;
     int barWidth = w * 2 / 3;
 
-    DrawRectangleLines(barX, barY - 150, barWidth, barHeight, BLUE);
-    DrawRectangle(barX, barY - 150, (int)(timePlayed * barWidth), barHeight, LIGHTGRAY);
+    DrawRectangleLines(barX, barY - 150, barWidth, barHeight, WHITE);
+    DrawRectangle(barX, barY - 150, (int)(timePlayed * barWidth), barHeight, BLUE);
 
     DrawText("Now Playing:", barX + 200, barY - 120, 20, LIGHTGRAY);
 
