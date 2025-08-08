@@ -14,6 +14,7 @@ typedef struct {
     const char* currentFile;
 } Plug;
 
+
 void plug_hello(void);
 void plug_init(Plug* plug, const char* file_path);
 void plug_update(Plug* plug);
