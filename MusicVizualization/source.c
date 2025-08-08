@@ -16,7 +16,6 @@ int playlist_size = 0;
 int currentSongIndex = 0;
 Plug plug = { 0 };
 
-
 int build_playlist_from_dropped_files(FilePathList dropped) {
     playlist_size = 0;
 
@@ -63,7 +62,7 @@ int load_playlist_from_file(const char* filename) {
 
         char* path = malloc(strlen(line) + 1);
         if (!path) {
-            fprintf(stderr, "Memory allocation failed\n");
+            fprintf(stderr, "DOWNLOAD RAM BROKIE\n");
             fclose(file);
             return 0;
         }
@@ -109,10 +108,28 @@ int main(int argc, char* argv[]) {
 
             if (IsFileDropped()) {
                 FilePathList dropped = LoadDroppedFiles();
+
+                bool allValid = true;
+                for (int i = 0; i < dropped.count; i++) {
+                    if (!IsFileExtension(dropped.paths[i], ".wav")) {
+                        allValid = false;
+                        break;
+                    }
+                }
+
+                if (!allValid) {
+                    UnloadDroppedFiles(dropped);
+                    CloseWindow();
+                    fprintf(stderr, "Error: Only .wav files are allowed in create mode.\n");
+
+                    return 1;
+                }
+
                 if (build_playlist_from_dropped_files(dropped) > 0) {
                     UnloadDroppedFiles(dropped);
                     break;
                 }
+
                 UnloadDroppedFiles(dropped);
             }
         }
@@ -136,6 +153,24 @@ int main(int argc, char* argv[]) {
 
             if (IsFileDropped()) {
                 FilePathList dropped = LoadDroppedFiles();
+
+                bool allValid = true;
+                for (int i = 0; i < dropped.count; i++) {
+                    if (!IsFileExtension(dropped.paths[i], ".wav") &&
+                        !IsFileExtension(dropped.paths[i], ".txt")) {
+                        allValid = false;
+                        break;
+                    }
+                }
+
+                if (!allValid) {
+                    UnloadDroppedFiles(dropped);
+                    CloseWindow();
+                    fprintf(stderr, "Error: Only .wav or .txt files are supported.\n");
+                    fprintf(stderr, "JUST DOWNLOAD RAM BROKIE\n");
+                    return 1;
+                }
+
                 for (int i = 0; i < dropped.count && playlist_size == 0; i++) {
                     const char* path = dropped.paths[i];
                     if (IsFileExtension(path, ".txt")) {
@@ -147,6 +182,7 @@ int main(int argc, char* argv[]) {
                         break;
                     }
                 }
+
                 UnloadDroppedFiles(dropped);
                 if (playlist_size > 0) break;
             }
