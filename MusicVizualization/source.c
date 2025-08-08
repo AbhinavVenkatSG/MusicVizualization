@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
+
 #include "plug.h"
 #include "utils.h"
 
@@ -14,6 +16,7 @@
 const char* playlist[MAX_SONGS] = { 0 };
 int playlist_size = 0;
 int currentSongIndex = 0;
+int shuffleMode = 0;
 Plug plug = { 0 };
 
 int build_playlist_from_dropped_files(FilePathList dropped) {
@@ -62,7 +65,7 @@ int load_playlist_from_file(const char* filename) {
 
         char* path = malloc(strlen(line) + 1);
         if (!path) {
-            fprintf(stderr, "DOWNLOAD RAM BROKIE\n");
+            fprintf(stderr, "Memory allocation failed\n");
             fclose(file);
             return 0;
         }
@@ -83,11 +86,24 @@ void free_playlist() {
 }
 
 void play_next_song() {
-    currentSongIndex = (currentSongIndex + 1) % playlist_size;
+    if (shuffleMode) {
+        if (playlist_size > 1) {
+            int next;
+            do {
+                next = rand() % playlist_size;
+            } while (next == currentSongIndex);
+            currentSongIndex = next;
+        }
+    }
+    else {
+        currentSongIndex = (currentSongIndex + 1) % playlist_size;
+    }
     plug_init(&plug, playlist[currentSongIndex]);
 }
 
+
 int main(int argc, char* argv[]) {
+    srand((unsigned int)time(NULL));
     if (!Is_Arg_Valid(argc)) {
         printf("Usage: %s [play | create]\n", argv[0]);
         return 1;
@@ -121,7 +137,6 @@ int main(int argc, char* argv[]) {
                     UnloadDroppedFiles(dropped);
                     CloseWindow();
                     fprintf(stderr, "Error: Only .wav files are allowed in create mode.\n");
-
                     return 1;
                 }
 
@@ -167,7 +182,6 @@ int main(int argc, char* argv[]) {
                     UnloadDroppedFiles(dropped);
                     CloseWindow();
                     fprintf(stderr, "Error: Only .wav or .txt files are supported.\n");
-                    fprintf(stderr, "JUST DOWNLOAD RAM BROKIE\n");
                     return 1;
                 }
 
@@ -196,7 +210,9 @@ int main(int argc, char* argv[]) {
         InitAudioDevice();
         currentSongIndex = 0;
         plug_init(&plug, playlist[currentSongIndex]);
+        shuffleMode = 1;
 
+        bool songEnded = false;
         while (!WindowShouldClose()) {
             plug_update(&plug);
 
@@ -216,6 +232,11 @@ int main(int argc, char* argv[]) {
             if (IsKeyPressed(KEY_R)) {
                 StopMusicStream(plug.music);
                 plug_init(&plug, playlist[currentSongIndex]);
+            }
+
+            if (IsKeyPressed(KEY_S)) {
+                shuffleMode = !shuffleMode;
+                printf("Shuffle mode %s\n", shuffleMode ? "ON" : "OFF");
             }
 
             if (IsKeyPressed(KEY_ESCAPE)) break;
