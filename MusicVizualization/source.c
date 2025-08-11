@@ -112,6 +112,9 @@ int main(int argc, char* argv[]) {
     char user_instruction[ARGMAX];
     convertArgToLower(argv[1], user_instruction);
 
+    // ✅ Make window adjustable & run in background
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_ALWAYS_RUN);
+
     InitWindow(800, 600, "Music Visualizer");
     SetTargetFPS(60);
 
@@ -212,7 +215,6 @@ int main(int argc, char* argv[]) {
         plug_init(&plug, playlist[currentSongIndex]);
         shuffleMode = 1;
 
-        bool songEnded = false;
         while (!WindowShouldClose()) {
             plug_update(&plug);
 
@@ -251,3 +253,4 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
+

@@ -113,6 +113,7 @@ void plug_update(Plug* plug)
     BeginDrawing();
     ClearBackground(CLITERAL(Color) { 0x18, 0x18, 0x18, 0xFF });
 
+    // --- FFT bars ---
     fillFFTInput();
     fft(in, 1, out, N);
 
@@ -133,7 +134,6 @@ void plug_update(Plug* plug)
     }
 
     float cell_width = (float)w / bands;
-
     static float prevAmps[1024] = { 0 };
     static bool firstRun = true;
     if (firstRun) {
@@ -181,39 +181,44 @@ void plug_update(Plug* plug)
         else
             snprintf(label, sizeof(label), "%.0fHz", freq);
         int x = (int)(i * cell_width);
-        DrawText(label, x, h / 2 + 5, 10, LIGHTGRAY);
+        DrawText(label, x, h / 2 + (h * 0.01f), h * 0.015f, LIGHTGRAY);
     }
 
+    // --- Progress bar ---
     float timePlayed = GetMusicTimePlayed(plug->music) / GetMusicTimeLength(plug->music);
     if (timePlayed > 1.0f) timePlayed = 1.0f;
 
-    int barHeight = 16;
-    int barY = h - 70;
+    int barHeight = h * 0.025f;
+    int barY = h - (h * 0.12f);
     int barX = w / 6;
     int barWidth = w * 2 / 3;
 
-    DrawRectangleLines(barX, barY - 150, barWidth, barHeight, WHITE);
-    DrawRectangle(barX, barY - 150, (int)(timePlayed * barWidth), barHeight, BLUE);
+    DrawRectangleLines(barX, barY - (h * 0.18f), barWidth, barHeight, WHITE);
+    DrawRectangle(barX, barY - (h * 0.18f), (int)(timePlayed * barWidth), barHeight, BLUE);
 
-    DrawText("Now Playing:", barX + 200, barY - 120, 20, LIGHTGRAY);
+    // --- Song info ---
+    DrawText("Now Playing:", barX + (w * 0.25f), barY - (h * 0.14f), h * 0.03f, LIGHTGRAY);
 
     const char* name = GetFileNameWithoutExt(plug->currentFile);
-    DrawText(name, barX + 150, barY - 100, 24, LIGHTGRAY);
-    DrawText("Press esc to exit player.", barX + 150, barY - 70, 20, LIGHTGRAY);
+    DrawText(name, barX + (w * 0.19f), barY - (h * 0.11f), h * 0.04f, LIGHTGRAY);
+    DrawText("Press esc to exit player.", barX + (w * 0.19f), barY - (h * 0.08f), h * 0.03f, LIGHTGRAY);
 
+    // --- Buttons ---
     int btnWidth = w / 8;
-    int btnHeight = 44;
-    int btnY = h - 100;
+    int btnHeight = h * 0.07f;
+    int btnY = h - (h * 0.15f);
 
-    Rectangle pauseBtn = { 50, btnY, btnWidth, btnHeight };
-    Rectangle restartBtn = { w - btnWidth - 50, btnY, btnWidth, btnHeight };
+    Rectangle pauseBtn = { 50 * (w / 800.0f), btnY, btnWidth, btnHeight };
+    Rectangle restartBtn = { w - btnWidth - (50 * (w / 800.0f)), btnY, btnWidth, btnHeight };
 
     DrawRectangleRec(pauseBtn, BLUE);
-    DrawText(IsMusicStreamPlaying(plug->music) ? "Pause" : "Resume", pauseBtn.x + 15, pauseBtn.y + 12, 20, WHITE);
+    DrawText(IsMusicStreamPlaying(plug->music) ? "Pause" : "Resume",
+        pauseBtn.x + btnWidth * 0.2f, pauseBtn.y + btnHeight * 0.27f, h * 0.03f, WHITE);
 
     DrawRectangleRec(restartBtn, BLUE);
-    DrawText("Restart", restartBtn.x + 10, restartBtn.y + 12, 20, WHITE);
+    DrawText("Restart", restartBtn.x + btnWidth * 0.25f, restartBtn.y + btnHeight * 0.27f, h * 0.03f, WHITE);
 
+    // --- Button actions ---
     Vector2 mouse = GetMousePosition();
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
         if (CheckCollisionPointRec(mouse, pauseBtn)) {
@@ -228,4 +233,5 @@ void plug_update(Plug* plug)
 
     EndDrawing();
 }
+
 
